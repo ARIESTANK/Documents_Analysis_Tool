@@ -11,8 +11,13 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 
-const API_ENDPOINT = "/api/analyze-document";
-const DOCUMENT_TYPES_ENDPOINT = "/api/document-types";
+// Use the same backend base URL as the rest of the app (set via
+// VITE_API_BASE_URL) instead of a hardcoded "/api" path — a hardcoded
+// path resolves against this Vercel deployment, which has no backend,
+// and Vercel's catch-all rewrite returns index.html instead of JSON.
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api";
+const API_ENDPOINT = `${API_BASE}/analyze-document`;
+const DOCUMENT_TYPES_ENDPOINT = `${API_BASE}/document-types`;
 
 const DOC_TYPE_OPTIONS = [
   { value: "textbook", label: "Textbook" },

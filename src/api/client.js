@@ -55,6 +55,13 @@ export const explainSection = (documentId, sectionTitle, sectionText) =>
 export const getChatHistory = (documentId) =>
   api.get(`/chat/${documentId}/history`).then((r) => r.data);
 
+export const getDocumentFunctions = (documentId) =>
+  api.get(`/documents/${documentId}/functions`).then((r) => r.data);
+export const runDocumentAnalysis = (documentId, functionKey) =>
+  api
+    .post(`/documents/${documentId}/analyze`, { function_key: functionKey })
+    .then((r) => r.data);
+
 export const generateSummary = (documentId) =>
   api.post(`/summary/${documentId}/generate`).then((r) => r.data);
 export const getSummary = (documentId) => api.get(`/summary/${documentId}`).then((r) => r.data);

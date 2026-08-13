@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Sparkles, Loader2, RefreshCcw } from "lucide-react";
 import useTranslatedContent from "../hooks/useTranslatedContent.js";
 import TranslatingOverlay from "./TranslatingOverlay.jsx";
+import { getDocumentFunctions, runDocumentAnalysis } from "../api/client.js";
 
 /**
  * Lists the AI functions available for this document's stored document_type
@@ -33,17 +34,12 @@ export default function AnalysisPanel({ document, language }) {
     if (!document?.id) return;
 
     setLoadingFunctions(true);
-    fetch(`/api/documents/${document.id}/functions`)
-      .then(async (res) => {
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || `Server responded with ${res.status}`);
-        return data;
-      })
+    getDocumentFunctions(document.id)
       .then((data) => {
         setDocType(data.document_type);
         setFunctions(data.functions || []);
       })
-      .catch((err) => setFunctionsError(err.message))
+      .catch((err) => setFunctionsError(err.response?.data?.error || err.message))
       .finally(() => setLoadingFunctions(false));
   }, [document?.id]);
 
@@ -53,16 +49,10 @@ export default function AnalysisPanel({ document, language }) {
     setRunError("");
     setResult(null);
     try {
-      const res = await fetch(`/api/documents/${document.id}/analyze`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ function_key: functionKey }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `Server responded with ${res.status}`);
+      const data = await runDocumentAnalysis(document.id, functionKey);
       setResult(data);
     } catch (err) {
-      setRunError(err.message);
+      setRunError(err.response?.data?.error || err.message);
     } finally {
       setRunning(false);
     }

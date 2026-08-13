@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { FileDown, RefreshCcw, Loader2 } from "lucide-react";
 import { generateSummary, getSummary } from "../api/client.js";
+import api from "../api/client.js";
 import useTranslatedContent from "../hooks/useTranslatedContent.js";
 import { useToast } from "../context/ToastContext.jsx";
 import TranslatingOverlay from "./TranslatingOverlay.jsx";
@@ -47,16 +48,14 @@ export default function SummaryPanel({ document, language }) {
     setExporting(true);
     setExportError("");
     try {
-      const res = await fetch(`/api/summary/${document.id}/export`);
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || `Server responded with ${res.status}`);
-      }
-      const blob = await res.blob();
+      const res = await api.get(`/summary/${document.id}/export`, {
+        responseType: "blob",
+      });
+      const blob = res.data;
 
       // Pull the filename the backend chose (Content-Disposition) instead
       // of hardcoding one, so it matches send_file's download_name.
-      const disposition = res.headers.get("Content-Disposition") || "";
+      const disposition = res.headers["content-disposition"] || "";
       const match = disposition.match(/filename="?([^"]+)"?/);
       const filename = match?.[1] || `${document.title || "summary"}.pdf`;
 
