@@ -39,6 +39,12 @@ export default function ProjectView() {
     refresh();
   }, [refresh]);
 
+  // Keep a document selected (e.g. after deleting the active one) whenever
+  // one is available.
+  useEffect(() => {
+    if (!activeId && documents.length) setActiveId(documents[0].id);
+  }, [activeId, documents]);
+
   // Poll status for any document still processing
   useEffect(() => {
     const processing = documents.filter((d) => d.status === "processing" || d.status === "uploaded");
@@ -94,6 +100,11 @@ export default function ProjectView() {
               selectedIds={selectedIds}
               onSelect={setActiveId}
               onToggleCompare={toggleCompare}
+              onDeleted={(deletedId) => {
+                setDocuments((prev) => prev.filter((d) => d.id !== deletedId));
+                setSelectedIds((prev) => prev.filter((id) => id !== deletedId));
+                setActiveId((prev) => (prev === deletedId ? null : prev));
+              }}
             />
           </div>
         </aside>

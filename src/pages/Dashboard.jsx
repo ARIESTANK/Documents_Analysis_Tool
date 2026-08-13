@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, FolderOpen, ArrowRight, X, ScanSearch } from "lucide-react";
-import { listProjects, createProject } from "../api/client.js";
+import { Plus, FolderOpen, ArrowRight, X, ScanSearch, Trash2 } from "lucide-react";
+import { listProjects, createProject, deleteProject } from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
 
@@ -15,6 +15,7 @@ export default function Dashboard() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -45,6 +46,25 @@ export default function Dashboard() {
       toast.error("Couldn't create the project.");
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleDelete = async (project, e) => {
+    e.stopPropagation();
+    const confirmed = window.confirm(
+      `Delete "${project.name}"? This permanently removes the workspace and every PDF inside it.`
+    );
+    if (!confirmed) return;
+
+    setDeletingId(project.id);
+    try {
+      await deleteProject(project.id);
+      setProjects((prev) => prev.filter((p) => p.id !== project.id));
+      toast.success(`"${project.name}" workspace deleted`);
+    } catch {
+      toast.error("Couldn't delete the workspace.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -129,21 +149,36 @@ export default function Dashboard() {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {projects.map((p, i) => (
-            <button
+            <div
               key={p.id}
               onClick={() => navigate(`/projects/${p.id}`)}
               style={{ "--stagger-index": i + 1 }}
-              className="stagger-item animate-fade-in-up tab-card card-lift text-left border border-rule bg-white/40 hover:bg-white/70 rounded-lg p-5 group"
+              className="stagger-item animate-fade-in-up tab-card card-lift text-left border border-rule bg-white/40 hover:bg-white/70 rounded-lg p-5 group cursor-pointer relative"
             >
               <div className="flex items-start justify-between">
                 <FolderOpen
                   size={20}
                   className="text-teal mb-3 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6"
                 />
-                <ArrowRight
-                  size={16}
-                  className="text-slate opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all"
-                />
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={(e) => handleDelete(p, e)}
+                    disabled={deletingId === p.id}
+                    aria-label={`Delete ${p.name}`}
+                    title="Delete workspace"
+                    className="btn-press p-1 rounded-md text-slate opacity-0 group-hover:opacity-100 hover:text-red-600 hover:bg-red-50 disabled:opacity-50 transition-all"
+                  >
+                    {deletingId === p.id ? (
+                      <span className="block w-4 h-4 border-2 border-slate/40 border-t-slate rounded-full animate-spin" />
+                    ) : (
+                      <Trash2 size={16} />
+                    )}
+                  </button>
+                  <ArrowRight
+                    size={16}
+                    className="text-slate opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all"
+                  />
+                </div>
               </div>
               <h3 className="font-display text-lg font-semibold text-ink mb-1">{p.name}</h3>
               {p.description && (
@@ -152,7 +187,7 @@ export default function Dashboard() {
               <p className="text-xs font-mono text-slate/70 mt-3">
                 {new Date(p.created_at).toLocaleDateString()}
               </p>
-            </button>
+            </div>
           ))}
         </div>
       )}
