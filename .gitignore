@@ -1,44 +1,46 @@
-# Environment variables / secrets
-.env
-.env.*
-!.env.example
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-
-# Virtual environments
-venv/
-env/
-ENV/
-.venv/
-
-# Distribution / packaging
-build/
+# Build output
 dist/
-*.egg-info/
-.eggs/
+dist-ssr/
+build/
 
-# Testing / caching
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.coverage
-htmlcov/
-.tox/
+# Env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# Uploaded / generated files
-uploads/
+# Logs
+logs/
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
 # Editor / OS
-.vscode/
+.vscode/*
+!.vscode/extensions.json
 .idea/
 .DS_Store
-Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# Zips / archives
-*.zip
+# Testing
+coverage/
+
+# Cache
+.cache/
+.parcel-cache/
+.vite/
+
+# Misc
+*.local
