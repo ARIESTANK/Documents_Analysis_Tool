@@ -14,6 +14,7 @@ const DOC_CATEGORIES = [
   { value: "business_report", label: "Business Report" },
   { value: "financial_report", label: "Financial Report" },
   { value: "technical_manual", label: "Technical Manual" },
+  { value: "office_letter", label: "Office Letter (ရုံးစာ)" },
 ];
 
 export default function UploadZone({ projectId, onUploaded }) {
