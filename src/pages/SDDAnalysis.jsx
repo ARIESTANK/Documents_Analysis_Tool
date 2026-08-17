@@ -30,6 +30,7 @@ const DOC_TYPE_OPTIONS = [
   { value: "business_report", label: "Business Report" },
   { value: "financial_report", label: "Financial Report" },
   { value: "technical_manual", label: "Technical Manual" },
+  { value: "office_letter", label: "Office Letter (ရုံးစာ)" },
 ];
 
 // Sections that can carry a diagram explanation from the backend.
