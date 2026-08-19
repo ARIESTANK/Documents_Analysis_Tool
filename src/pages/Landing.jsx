@@ -54,6 +54,28 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* QR Code */}
+      <section className="pb-20 flex justify-center animate-fade-in-up">
+        <div className="border border-rule bg-white/40 rounded-lg p-6 flex flex-col items-center text-center max-w-xs">
+          <img
+            src="/asserts/qr-code.png"
+            alt="QR code linking to Sadan AI"
+            className="w-40 h-40 rounded-md border border-rule bg-white p-2"
+          />
+          <p className="text-sm text-slate mt-4 leading-relaxed">
+            Scan to open Sadan AI on your phone
+          </p>
+          <a
+            href="https://documents-analysis-tool-me8f.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-mono text-xs text-teal mt-1 hover:underline break-all"
+          >
+            documents-analysis-tool-me8f.vercel.app
+          </a>
+        </div>
+      </section>
+
       {/* Features */}
       <section className="grid sm:grid-cols-3 gap-4 pb-24">
         {FEATURES.map((f, i) => (
