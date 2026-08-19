@@ -55,24 +55,37 @@ export default function Landing() {
       </section>
 
       {/* QR Code */}
-      <section className="pb-20 flex justify-center animate-fade-in-up">
-        <div className="border border-rule bg-white/40 rounded-lg p-6 flex flex-col items-center text-center max-w-xs">
-          <img
-            src="/asserts/qr-code.png"
-            alt="QR code linking to Sadan AI"
-            className="w-40 h-40 rounded-md border border-rule bg-white p-2"
-          />
-          <p className="text-sm text-slate mt-4 leading-relaxed">
-            Scan to open Sadan AI on your phone
-          </p>
-          <a
-            href="https://documents-analysis-tool-me8f.vercel.app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-mono text-xs text-teal mt-1 hover:underline break-all"
-          >
-            documents-analysis-tool-me8f.vercel.app
-          </a>
+      <section className="pb-20 animate-fade-in-up">
+        <div className="border border-rule bg-white/40 rounded-lg p-8 flex flex-col sm:flex-row items-center gap-8">
+          <div className="flex-1 text-center sm:text-left">
+            <div className="inline-flex items-center gap-2 border border-rule bg-white/60 rounded-full px-3 py-1 mb-4 font-mono text-xs text-slate">
+              <BookMarked size={12} className="text-teal" />
+              Try it on your phone
+            </div>
+            <h3 className="font-display text-2xl font-semibold text-ink mb-2">
+              Take Sadan AI with you
+            </h3>
+            <p className="text-sm text-slate leading-relaxed max-w-md">
+              Scan the code with your phone's camera to open Sadan AI instantly —
+              no typing, no searching. Upload a paper and start chatting with it
+              on the go.
+            </p>
+            <a
+              href="https://documents-analysis-tool-me8f.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block font-mono text-xs text-teal mt-3 hover:underline break-all"
+            >
+              documents-analysis-tool-me8f.vercel.app
+            </a>
+          </div>
+          <div className="shrink-0">
+            <img
+              src="/asserts/qr-code.png"
+              alt="QR code linking to Sadan AI"
+              className="w-36 h-36 sm:w-40 sm:h-40 rounded-md border border-rule bg-white p-2"
+            />
+          </div>
         </div>
       </section>
 
