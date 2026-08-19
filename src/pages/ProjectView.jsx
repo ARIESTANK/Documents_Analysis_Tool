@@ -90,22 +90,36 @@ export default function ProjectView() {
               setActiveId(doc.id);
             }}
           />
-          <div>
-            <p className="text-[11px] font-mono uppercase tracking-widest text-slate mb-2 px-1">
-              Papers
-            </p>
-            <DocumentList
-              documents={documents}
-              activeId={activeId}
-              selectedIds={selectedIds}
-              onSelect={setActiveId}
-              onToggleCompare={toggleCompare}
-              onDeleted={(deletedId) => {
-                setDocuments((prev) => prev.filter((d) => d.id !== deletedId));
-                setSelectedIds((prev) => prev.filter((id) => id !== deletedId));
-                setActiveId((prev) => (prev === deletedId ? null : prev));
-              }}
-            />
+          <div className="border border-rule bg-white/30 rounded-xl shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between px-3 py-2 border-b border-rule bg-white/40">
+              <p className="text-[11px] font-mono uppercase tracking-widest text-slate">
+                Papers
+              </p>
+              {documents.length > 0 && (
+                <span className="text-[10px] font-mono text-slate/80 bg-white/70 border border-rule rounded-full px-1.5 py-0.5 leading-none">
+                  {documents.length}
+                </span>
+              )}
+            </div>
+            {/*
+              Cap the list so it scrolls internally once it outgrows the
+              sidebar, instead of pushing the whole page taller. lg:max-h ties
+              it loosely to the center panel's viewport-relative height.
+            */}
+            <div className="p-2 max-h-72 lg:max-h-[calc(100vh-360px)] lg:min-h-[160px] overflow-y-auto">
+              <DocumentList
+                documents={documents}
+                activeId={activeId}
+                selectedIds={selectedIds}
+                onSelect={setActiveId}
+                onToggleCompare={toggleCompare}
+                onDeleted={(deletedId) => {
+                  setDocuments((prev) => prev.filter((d) => d.id !== deletedId));
+                  setSelectedIds((prev) => prev.filter((id) => id !== deletedId));
+                  setActiveId((prev) => (prev === deletedId ? null : prev));
+                }}
+              />
+            </div>
           </div>
         </aside>
 

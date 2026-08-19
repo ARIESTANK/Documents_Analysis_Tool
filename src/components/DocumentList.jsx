@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { FileText, CheckCircle2, Loader2, XCircle, Trash2 } from "lucide-react";
+import { FileText, FileStack, CheckCircle2, Loader2, XCircle, Trash2 } from "lucide-react";
 import { deleteDocument } from "../api/client.js";
 import { useToast } from "../context/ToastContext.jsx";
 
 const STATUS_ICON = {
-  ready: <CheckCircle2 size={14} className="text-teal" />,
-  processing: <Loader2 size={14} className="text-amber animate-spin" />,
-  uploaded: <Loader2 size={14} className="text-amber animate-spin" />,
-  failed: <XCircle size={14} className="text-red-600" />,
+  ready: <CheckCircle2 size={13} className="text-teal" />,
+  processing: <Loader2 size={13} className="text-amber animate-spin" />,
+  uploaded: <Loader2 size={13} className="text-amber animate-spin" />,
+  failed: <XCircle size={13} className="text-red-600" />,
 };
 
 export default function DocumentList({
@@ -40,9 +40,10 @@ export default function DocumentList({
 
   if (documents.length === 0) {
     return (
-      <p className="text-xs text-slate font-mono px-1 animate-fade-in">
-        No papers uploaded yet.
-      </p>
+      <div className="flex flex-col items-center justify-center text-center py-6 px-2 animate-fade-in">
+        <FileStack size={22} className="text-slate/40 mb-2" />
+        <p className="text-xs text-slate font-mono">No papers uploaded yet.</p>
+      </div>
     );
   }
 
@@ -52,12 +53,18 @@ export default function DocumentList({
         <li
           key={doc.id}
           style={{ "--stagger-index": i + 1 }}
-          className={`tab-card stagger-item animate-fade-in-up flex items-center gap-2 rounded-md px-2.5 py-2 cursor-pointer border transition-all duration-200 ${
+          className={`tab-card stagger-item animate-fade-in-up group relative flex items-center gap-2 rounded-md pl-2.5 pr-2 py-2 cursor-pointer border transition-all duration-200 ${
             activeId === doc.id
               ? "active bg-white/70 border-rule shadow-sm"
-              : "border-transparent hover:bg-white/40 hover:translate-x-0.5"
+              : "border-transparent hover:bg-white/50 hover:border-rule/60 hover:shadow-sm hover:translate-x-0.5"
           }`}
         >
+          {/* Active-state accent bar, replaces the old translate-only cue */}
+          <span
+            className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-teal transition-opacity duration-200 ${
+              activeId === doc.id ? "opacity-100" : "opacity-0"
+            }`}
+          />
           <input
             type="checkbox"
             checked={selectedIds.includes(doc.id)}
@@ -66,19 +73,24 @@ export default function DocumentList({
               onToggleCompare(doc.id);
             }}
             onClick={(e) => e.stopPropagation()}
-            className="accent-teal"
+            className="accent-teal shrink-0"
             title="Select for comparison"
           />
           <div className="flex-1 min-w-0" onClick={() => onSelect(doc.id)}>
             <div className="flex items-center gap-1.5">
               <FileText size={13} className="text-slate shrink-0" />
-              <span className="text-sm text-ink truncate">{doc.title}</span>
+              <span
+                className="text-sm text-ink truncate"
+                title={doc.title}
+              >
+                {doc.title}
+              </span>
             </div>
             <div className="flex items-center gap-1 mt-0.5">
               {STATUS_ICON[doc.status] || null}
-              <span className="text-[11px] font-mono text-slate/80">
+              <span className="text-[11px] font-mono text-slate/80 truncate">
                 {doc.status === "ready"
-                  ? `${doc.page_count} pages`
+                  ? `${doc.page_count} page${doc.page_count === 1 ? "" : "s"}`
                   : doc.status}
               </span>
             </div>
@@ -88,7 +100,7 @@ export default function DocumentList({
             disabled={deletingId === doc.id}
             aria-label={`Delete ${doc.title}`}
             title="Delete document"
-            className="btn-press shrink-0 p-1 rounded-md text-slate/60 hover:text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
+            className="btn-press shrink-0 p-1 rounded-md text-slate/60 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:text-red-600 hover:bg-red-50 disabled:opacity-50 transition-all"
           >
             {deletingId === doc.id ? (
               <span className="block w-3.5 h-3.5 border-2 border-slate/40 border-t-slate rounded-full animate-spin" />
