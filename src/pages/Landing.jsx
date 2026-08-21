@@ -6,22 +6,38 @@ const FEATURES = [
     icon: MessageSquare,
     title: "Ask your papers questions",
     body: "Chat with any uploaded document and get answers grounded in its actual text, with citations back to the page and section.",
+    bg: "bg-teal/10",
+    ring: "ring-teal/20",
+    color: "text-teal",
   },
   {
     icon: ScrollText,
     title: "Instant structured summaries",
     body: "Problem, method, results, limitations, and key contributions — generated automatically so you know if a paper is worth a full read.",
+    bg: "bg-amber/10",
+    ring: "ring-amber/20",
+    color: "text-amber",
   },
   {
     icon: Scale,
     title: "Compare papers side by side",
     body: "Select multiple documents in a workspace and get a structured comparison table plus an AI-written synthesis of how they relate.",
+    bg: "bg-rust/10",
+    ring: "ring-rust/20",
+    color: "text-rust",
   },
 ];
 
 export default function Landing() {
   return (
-    <div className="max-w-7xl mx-auto px-6">
+    <div className="max-w-7xl mx-auto px-6 relative">
+      {/* Soft ambient color blobs behind the hero */}
+      <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[420px] -z-10 overflow-hidden">
+        <div className="absolute -left-10 top-0 w-72 h-72 rounded-full bg-teal/20 blur-3xl" />
+        <div className="absolute right-0 top-10 w-72 h-72 rounded-full bg-amber/20 blur-3xl" />
+        <div className="absolute left-1/3 top-24 w-64 h-64 rounded-full bg-rust/10 blur-3xl" />
+      </div>
+
       {/* Hero */}
       <section className="pt-20 pb-16 text-center animate-fade-in-up">
         <div className="inline-flex items-center gap-2 border border-rule bg-white/50 rounded-full px-3.5 py-1.5 mb-6 font-mono text-xs text-slate animate-float-slow">
@@ -29,7 +45,7 @@ export default function Landing() {
           AI-powered research assistant
         </div>
         <h1 className="font-display text-4xl sm:text-5xl font-semibold text-ink leading-tight max-w-3xl mx-auto">
-          Read less. Know more about every paper.
+          Read less. Know more about <span className="brand-gradient">every paper</span>.
         </h1>
         <p className="text-slate text-base sm:text-lg mt-5 max-w-xl mx-auto leading-relaxed">
           Sadan AI organizes your papers into workspaces, then lets you chat with
@@ -97,10 +113,11 @@ export default function Landing() {
             className="stagger-item animate-fade-in-up card-lift group border border-rule bg-white/40 rounded-lg p-6"
             style={{ "--stagger-index": i + 1 }}
           >
-            <f.icon
-              size={22}
-              className="text-teal mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"
-            />
+            <div
+              className={`inline-flex items-center justify-center w-11 h-11 rounded-lg ${f.bg} ring-1 ${f.ring} mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3`}
+            >
+              <f.icon size={20} className={f.color} />
+            </div>
             <h3 className="font-display text-lg font-semibold text-ink mb-2">
               {f.title}
             </h3>

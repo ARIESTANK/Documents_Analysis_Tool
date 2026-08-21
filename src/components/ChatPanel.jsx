@@ -74,7 +74,7 @@ export default function ChatPanel({ document, onCitationsUpdate, language }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto px-1 py-3 space-y-4">
+      <div className="chat-scroll flex-1 overflow-y-auto px-1 py-3 space-y-4 scroll-smooth">
         {messages.length === 0 && (
           <div className="mb-4">
             <p className="text-sm text-slate mb-2 font-mono">Try asking —</p>

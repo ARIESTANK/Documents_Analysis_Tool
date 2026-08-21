@@ -9,6 +9,8 @@ import {
   XCircle,
   AlertTriangle,
   Image as ImageIcon,
+  Circle,
+  Loader2,
 } from "lucide-react";
 
 // Use the same backend base URL as the rest of the app (set via
@@ -44,6 +46,19 @@ const DIAGRAM_SECTION_KEYS = new Set([
   "system_flow",
 ]);
 
+// The backend responds with one final JSON payload, so there's no live
+// progress feed from the server. We show the pipeline as a checklist and
+// step it forward on a timer while the request is in flight — each step
+// pauses just before the end so it never claims "done" before the real
+// response lands.
+const PROCESS_STEPS = [
+  { key: "upload", label: "Uploading document" },
+  { key: "extract", label: "Extracting text" },
+  { key: "analyze", label: "Analyzing content" },
+  { key: "sections", label: "Matching sections" },
+  { key: "finalize", label: "Preparing results" },
+];
+
 export default function SDDAnalyzer() {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
@@ -53,7 +68,9 @@ export default function SDDAnalyzer() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
+  const [stepIndex, setStepIndex] = useState(-1);
   const inputRef = useRef(null);
+  const stepTimerRef = useRef(null);
 
   useEffect(() => {
     const loadDocumentTypes = async () => {
@@ -83,10 +100,36 @@ export default function SDDAnalyzer() {
     handleFiles(e.dataTransfer.files);
   }, []);
 
+  // Advance one step at a time on a timer. Stops one step short of the end
+  // so the checklist never shows "finalize" done before the response
+  // actually arrives — the finally block below completes it for real.
+  const startStepProgress = () => {
+    setStepIndex(0);
+    clearInterval(stepTimerRef.current);
+    stepTimerRef.current = setInterval(() => {
+      setStepIndex((prev) => {
+        const next = prev + 1;
+        if (next >= PROCESS_STEPS.length - 1) {
+          clearInterval(stepTimerRef.current);
+          return PROCESS_STEPS.length - 1;
+        }
+        return next;
+      });
+    }, 900);
+  };
+
+  const stopStepProgress = (completed) => {
+    clearInterval(stepTimerRef.current);
+    setStepIndex(completed ? PROCESS_STEPS.length : -1);
+  };
+
+  useEffect(() => () => clearInterval(stepTimerRef.current), []);
+
   const onSubmit = async () => {
     if (!file) return;
     setLoading(true);
     setError("");
+    startStepProgress();
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -95,12 +138,14 @@ export default function SDDAnalyzer() {
       if (!res.ok) throw new Error(`Server responded with ${res.status}`);
       const data = await res.json();
       setResult(data);
+      stopStepProgress(true);
     } catch (err) {
       setError(
         err.message === "Failed to fetch"
           ? "Could not reach the backend. Is Flask running on :5000?"
           : err.message
       );
+      stopStepProgress(false);
     } finally {
       setLoading(false);
     }
@@ -110,6 +155,8 @@ export default function SDDAnalyzer() {
     setFile(null);
     setResult(null);
     setError("");
+    setStepIndex(-1);
+    clearInterval(stepTimerRef.current);
     if (inputRef.current) inputRef.current.value = "";
   };
 
@@ -227,20 +274,58 @@ export default function SDDAnalyzer() {
             )}
 
             {loading && (
-              <div className="space-y-4 animate-fade-in">
-                <div className="skeleton h-4 w-40 rounded" />
-                <div className="skeleton h-16 w-full rounded-md" />
-                <div className="mt-6">
-                  <div className="skeleton h-3 w-24 rounded mb-2" />
+              <div className="space-y-5 animate-fade-in">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-ink">Processing</span>
+                    <span className="text-xs font-mono text-teal">
+                      Step {Math.min(stepIndex + 1, PROCESS_STEPS.length)} of {PROCESS_STEPS.length}
+                    </span>
+                  </div>
                   <div className="h-2 rounded-full bg-rule/30 overflow-hidden">
-                    <div className="progress-fill h-full w-2/3 rounded-full" />
+                    <div
+                      className="progress-fill h-full rounded-full transition-all duration-500 ease-out"
+                      style={{
+                        width: `${(Math.min(stepIndex + 1, PROCESS_STEPS.length) / PROCESS_STEPS.length) * 100}%`,
+                      }}
+                    />
                   </div>
                 </div>
-                <div className="grid gap-2 pt-2">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="skeleton h-10 w-full rounded-md" />
-                  ))}
-                </div>
+
+                <ul className="grid gap-2">
+                  {PROCESS_STEPS.map((step, i) => {
+                    const isDone = i < stepIndex;
+                    const isActive = i === stepIndex;
+                    return (
+                      <li
+                        key={step.key}
+                        className={`flex items-center gap-2.5 border rounded-md px-3 py-2 transition-colors ${
+                          isDone
+                            ? "border-teal/30 bg-teal/10"
+                            : isActive
+                            ? "border-amber/40 bg-amber/10"
+                            : "border-rule bg-white/40"
+                        }`}
+                      >
+                        {isDone ? (
+                          <CheckCircle2 size={15} className="text-teal shrink-0" />
+                        ) : isActive ? (
+                          <Loader2 size={15} className="text-amber shrink-0 animate-spin" />
+                        ) : (
+                          <Circle size={15} className="text-slate/40 shrink-0" />
+                        )}
+                        <span
+                          className={`text-sm ${
+                            isDone ? "text-ink" : isActive ? "text-ink font-medium" : "text-slate/70"
+                          }`}
+                        >
+                          {step.label}
+                          {isDone && <span className="text-xs text-teal font-mono ml-2">done</span>}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
             )}
 
