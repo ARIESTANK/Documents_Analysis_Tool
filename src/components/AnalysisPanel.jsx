@@ -171,95 +171,181 @@ export default function AnalysisPanel({ document, language }) {
   );
 }
 
-/** Renders a JSON analysis result as readable blocks instead of a raw
- * dump. Handles the common shapes returned by the analysis functions:
- * plain strings, lists of "item cards" (e.g. requirements with an id/
- * description/priority), lists of plain strings, and nested objects —
- * falling back to pretty-printed JSON only for shapes it doesn't recognize. */
+/** Renders a JSON analysis result as readable, human-friendly UI instead of
+ * a raw dump. Fully recursive — objects, arrays, and nested combinations of
+ * both are all turned into cards/lists/badges, so nothing ever falls back
+ * to a printed JSON blob. */
 function JsonResult({ data }) {
-  if (data && typeof data === "object" && !Array.isArray(data)) {
+  return <ValueBlock value={data} topLevel />;
+}
+
+const PRIORITY_STYLES = {
+  high: "text-rust bg-rust/10 border-rust/30",
+  medium: "text-amber bg-amber/10 border-amber/30",
+  low: "text-teal bg-teal/10 border-teal/30",
+};
+
+function fieldLabel(key) {
+  return key.replace(/_/g, " ");
+}
+
+/** A single primitive value (string/number/boolean/null) rendered as text. */
+function Primitive({ value }) {
+  if (value === null || value === undefined || value === "") {
+    return <span className="text-sm text-slate/60 italic">—</span>;
+  }
+  if (typeof value === "boolean") {
+    return (
+      <span
+        className={`text-[11px] font-mono uppercase tracking-wide rounded-full px-2 py-0.5 border ${
+          value ? "text-teal bg-teal/10 border-teal/30" : "text-slate bg-slate/10 border-rule"
+        }`}
+      >
+        {value ? "Yes" : "No"}
+      </span>
+    );
+  }
+  return <span className="text-sm text-ink leading-relaxed whitespace-pre-wrap">{String(value)}</span>;
+}
+
+/** A small pill for short tag-like fields (id, priority, severity, status…). */
+function Tag({ label, value }) {
+  const lower = String(value).toLowerCase();
+  const priorityClass = PRIORITY_STYLES[lower];
+  return (
+    <span
+      className={`text-[10px] font-mono uppercase tracking-wide rounded-full px-2 py-0.5 border ${
+        priorityClass || "text-teal bg-teal/10 border-teal/30"
+      }`}
+      title={fieldLabel(label)}
+    >
+      {String(value)}
+    </span>
+  );
+}
+
+/** Object rendered as a card: short fields become tags up top, the longest
+ * text field (usually "description"/"text"/"summary") becomes the headline,
+ * and anything else nested renders recursively underneath. */
+function ObjectCard({ obj }) {
+  const entries = Object.entries(obj);
+
+  // Pick the "headline" field: the longest plain string value, preferring
+  // common names when there's a tie or nothing obviously longer.
+  const preferredNames = ["description", "text", "summary", "content", "title", "name"];
+  let headlineKey = null;
+  for (const name of preferredNames) {
+    if (typeof obj[name] === "string" && obj[name]) {
+      headlineKey = name;
+      break;
+    }
+  }
+  if (!headlineKey) {
+    let longest = 0;
+    for (const [k, v] of entries) {
+      if (typeof v === "string" && v.length > longest) {
+        longest = v.length;
+        headlineKey = k;
+      }
+    }
+  }
+
+  const tagEntries = entries.filter(
+    ([k, v]) => k !== headlineKey && (typeof v === "string" || typeof v === "number") && String(v).length <= 24
+  );
+  const restEntries = entries.filter(
+    ([k]) => k !== headlineKey && !tagEntries.some(([tk]) => tk === k)
+  );
+
+  return (
+    <div className="border border-rule bg-parchment/40 rounded-md px-3 py-2">
+      {tagEntries.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-1.5">
+          {tagEntries.map(([k, v]) => (
+            <Tag key={k} label={k} value={v} />
+          ))}
+        </div>
+      )}
+      {headlineKey && (
+        <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap">{obj[headlineKey]}</p>
+      )}
+      {restEntries.length > 0 && (
+        <div className="grid gap-2 mt-2 pt-2 border-t border-rule/60">
+          {restEntries.map(([k, v]) => (
+            <div key={k}>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-slate/70 mb-0.5">
+                {fieldLabel(k)}
+              </p>
+              <ValueBlock value={v} />
+            </div>
+          ))}
+        </div>
+      )}
+      {!headlineKey && tagEntries.length === 0 && restEntries.length === 0 && (
+        <p className="text-sm text-slate/60 italic">Empty</p>
+      )}
+    </div>
+  );
+}
+
+function ValueBlock({ value, topLevel = false }) {
+  // Top-level object -> one section per key, each with its own labeled card.
+  if (topLevel && value && typeof value === "object" && !Array.isArray(value)) {
+    const entries = Object.entries(value);
+    if (entries.length === 0) {
+      return <p className="text-sm text-slate/70 italic">No results.</p>;
+    }
     return (
       <div className="grid gap-3">
-        {Object.entries(data).map(([key, value]) => (
+        {entries.map(([key, val]) => (
           <div key={key} className="border border-rule bg-white/70 rounded-md px-3 py-2">
-            <p className="text-[11px] font-mono uppercase tracking-widest text-amber mb-1">
-              {key.replace(/_/g, " ")}
+            <p className="text-[11px] font-mono uppercase tracking-widest text-amber mb-1.5">
+              {fieldLabel(key)}
             </p>
-            <ValueBlock value={value} />
+            <ValueBlock value={val} />
           </div>
         ))}
       </div>
     );
-  }
-  return <ValueBlock value={data} />;
-}
-
-function ValueBlock({ value }) {
-  if (typeof value === "string") {
-    return <p className="text-sm text-slate leading-relaxed whitespace-pre-wrap">{value}</p>;
   }
 
   if (Array.isArray(value)) {
     if (value.length === 0) {
       return <p className="text-sm text-slate/70 italic">None</p>;
     }
-    // List of plain strings -> simple bullet list.
-    if (value.every((item) => typeof item === "string")) {
+    // List of plain strings/numbers -> simple bullet list.
+    if (value.every((item) => typeof item === "string" || typeof item === "number")) {
       return (
         <ul className="list-disc pl-4 space-y-1">
           {value.map((item, i) => (
-            <li key={i} className="text-sm text-slate leading-relaxed">
-              {item}
+            <li key={i} className="text-sm text-slate leading-relaxed whitespace-pre-wrap">
+              {String(item)}
             </li>
           ))}
         </ul>
       );
     }
-    // List of objects (e.g. requirements: { id, description, priority }) ->
-    // a card per item with the description as the headline and any other
-    // fields (id, priority, ...) shown as small tags above it.
-    if (value.every((item) => item && typeof item === "object" && !Array.isArray(item))) {
-      return (
-        <div className="grid gap-2">
-          {value.map((item, i) => {
-            const { description, ...rest } = item;
-            const tagEntries = Object.entries(rest);
-            return (
-              <div key={i} className="border border-rule bg-parchment/40 rounded-md px-3 py-2">
-                {tagEntries.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mb-1.5">
-                    {tagEntries.map(([k, v]) => (
-                      <span
-                        key={k}
-                        className="text-[10px] font-mono uppercase tracking-wide text-teal bg-teal/10 border border-teal/30 rounded-full px-2 py-0.5"
-                      >
-                        {String(v)}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {description !== undefined ? (
-                  <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap">
-                    {String(description)}
-                  </p>
-                ) : (
-                  <pre className="text-xs font-mono text-slate whitespace-pre-wrap break-words">
-                    {JSON.stringify(item, null, 2)}
-                  </pre>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      );
-    }
+    // List of objects -> a card per item.
+    return (
+      <div className="grid gap-2">
+        {value.map((item, i) =>
+          item && typeof item === "object" && !Array.isArray(item) ? (
+            <ObjectCard key={i} obj={item} />
+          ) : (
+            <div key={i} className="border border-rule bg-parchment/40 rounded-md px-3 py-2">
+              <ValueBlock value={item} />
+            </div>
+          )
+        )}
+      </div>
+    );
   }
 
-  return (
-    <pre className="text-xs font-mono text-slate whitespace-pre-wrap break-words">
-      {JSON.stringify(value, null, 2)}
-    </pre>
-  );
+  if (value && typeof value === "object") {
+    return <ObjectCard obj={value} />;
+  }
+
+  return <Primitive value={value} />;
 }
 
 function PlaceholderPane({ text }) {
