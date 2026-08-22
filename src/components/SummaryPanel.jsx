@@ -79,7 +79,7 @@ export default function SummaryPanel({ document, language }) {
     return <PlaceholderPane text={`This paper is still ${document.status}.`} />;
 
   return (
-    <div className="h-full overflow-y-auto px-1 py-3">
+    <div className="chat-scroll h-full overflow-y-auto px-1 py-3">
       <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
         <h3 className="font-display text-lg font-semibold text-ink truncate min-w-0">
           {document.title}

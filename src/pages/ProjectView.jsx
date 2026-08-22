@@ -131,15 +131,15 @@ export default function ProjectView() {
           room for the header above) gives min-h-0 children something real
           to scroll within.
         */}
-        <section className="border border-rule bg-white/30 rounded-xl min-h-[560px] xl:h-[calc(100vh-180px)] overflow-hidden shadow-sm min-w-0">
+        <section className="border border-rule bg-white/30 rounded-xl h-[calc(100vh-200px)] min-h-[560px] overflow-hidden shadow-sm min-w-0">
           {/*
-            Mobile-first: single column (stacked) by default so both panes
-            get real, explicit heights instead of collapsing. The 2-column
-            split only kicks in at `xl` and above, where there's actually
-            room for it.
+            Both the preview pane and the workspace pane get a real, bounded
+            height at every breakpoint (not just `xl`) via grid-rows-2 /
+            h-full, so each one scrolls internally instead of the whole page
+            growing taller. The 2-column split kicks in at `xl`.
           */}
-          <div className="grid grid-cols-1 xl:grid-cols-[1.05fr_0.95fr] xl:h-full min-w-0 min-h-0">
-            <div className="border-b xl:border-b-0 xl:border-r border-rule bg-gradient-to-br from-white/80 to-white/50 p-4 flex flex-col min-w-0 min-h-[420px] xl:min-h-0">
+          <div className="grid grid-cols-1 xl:grid-cols-[1.05fr_0.95fr] grid-rows-2 xl:grid-rows-1 h-full min-w-0 min-h-0">
+            <div className="border-b xl:border-b-0 xl:border-r border-rule bg-gradient-to-br from-white/80 to-white/50 p-4 flex flex-col min-w-0 min-h-0">
               <div className="mb-3 flex items-start justify-between gap-2 flex-wrap">
                 <div className="min-w-0">
                   <p className="text-[11px] font-mono uppercase tracking-widest text-slate mb-1">
@@ -171,7 +171,7 @@ export default function ProjectView() {
               </div>
             </div>
 
-            <div className="flex flex-col bg-white/60 min-w-0 min-h-[420px] xl:min-h-0">
+            <div className="flex flex-col bg-white/60 min-w-0 min-h-0">
               <div className="flex border-b border-rule bg-white/70 overflow-x-auto items-center">
                 {TABS.map(({ key, label, icon: Icon }) => (
                   <button
@@ -201,7 +201,14 @@ export default function ProjectView() {
                   {language === "English" ? "🇲🇲 မြန်မာ" : "EN English"}
                 </button>
               </div>
-              <div key={tab} className="flex-1 px-4 py-3 overflow-y-auto min-h-0 animate-fade-in-up">
+              {/*
+                No overflow/scroll here — each panel below (Chat, Summary,
+                Analyze, Compare) owns its own internal scroll container so
+                things like Chat's input bar can stay pinned. Letting this
+                wrapper also scroll caused nested/double scrollbars and let
+                the page grow tall instead of scrolling in place.
+              */}
+              <div key={tab} className="flex-1 min-h-0 animate-fade-in-up">
                 {tab === "chat" && (
                   <ChatPanel document={activeDoc} onCitationsUpdate={setCitations} language={language} />
                 )}

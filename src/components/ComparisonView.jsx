@@ -33,7 +33,7 @@ export default function ComparisonView({ projectId, documents, selectedIds, lang
   }
 
   return (
-    <div className="h-full overflow-y-auto px-1 py-3">
+    <div className="chat-scroll h-full overflow-y-auto px-1 py-3">
       <div className="flex items-center justify-between mb-4">
         <div>
           <p className="text-[11px] font-mono uppercase tracking-widest text-amber mb-1">

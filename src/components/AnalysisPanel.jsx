@@ -66,7 +66,7 @@ export default function AnalysisPanel({ document, language }) {
   }
 
   return (
-    <div className="h-full overflow-y-auto px-1 py-3">
+    <div className="chat-scroll h-full overflow-y-auto px-1 py-3">
       {loadingFunctions ? (
         <div className="grid sm:grid-cols-2 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -171,8 +171,11 @@ export default function AnalysisPanel({ document, language }) {
   );
 }
 
-/** Renders a JSON analysis result as readable key/value blocks instead of
- * a raw dump — falls back to pretty-printed JSON for arrays/nested shapes. */
+/** Renders a JSON analysis result as readable blocks instead of a raw
+ * dump. Handles the common shapes returned by the analysis functions:
+ * plain strings, lists of "item cards" (e.g. requirements with an id/
+ * description/priority), lists of plain strings, and nested objects —
+ * falling back to pretty-printed JSON only for shapes it doesn't recognize. */
 function JsonResult({ data }) {
   if (data && typeof data === "object" && !Array.isArray(data)) {
     return (
@@ -182,21 +185,79 @@ function JsonResult({ data }) {
             <p className="text-[11px] font-mono uppercase tracking-widest text-amber mb-1">
               {key.replace(/_/g, " ")}
             </p>
-            {typeof value === "string" ? (
-              <p className="text-sm text-slate leading-relaxed whitespace-pre-wrap">{value}</p>
-            ) : (
-              <pre className="text-xs font-mono text-slate whitespace-pre-wrap break-words">
-                {JSON.stringify(value, null, 2)}
-              </pre>
-            )}
+            <ValueBlock value={value} />
           </div>
         ))}
       </div>
     );
   }
+  return <ValueBlock value={data} />;
+}
+
+function ValueBlock({ value }) {
+  if (typeof value === "string") {
+    return <p className="text-sm text-slate leading-relaxed whitespace-pre-wrap">{value}</p>;
+  }
+
+  if (Array.isArray(value)) {
+    if (value.length === 0) {
+      return <p className="text-sm text-slate/70 italic">None</p>;
+    }
+    // List of plain strings -> simple bullet list.
+    if (value.every((item) => typeof item === "string")) {
+      return (
+        <ul className="list-disc pl-4 space-y-1">
+          {value.map((item, i) => (
+            <li key={i} className="text-sm text-slate leading-relaxed">
+              {item}
+            </li>
+          ))}
+        </ul>
+      );
+    }
+    // List of objects (e.g. requirements: { id, description, priority }) ->
+    // a card per item with the description as the headline and any other
+    // fields (id, priority, ...) shown as small tags above it.
+    if (value.every((item) => item && typeof item === "object" && !Array.isArray(item))) {
+      return (
+        <div className="grid gap-2">
+          {value.map((item, i) => {
+            const { description, ...rest } = item;
+            const tagEntries = Object.entries(rest);
+            return (
+              <div key={i} className="border border-rule bg-parchment/40 rounded-md px-3 py-2">
+                {tagEntries.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-1.5">
+                    {tagEntries.map(([k, v]) => (
+                      <span
+                        key={k}
+                        className="text-[10px] font-mono uppercase tracking-wide text-teal bg-teal/10 border border-teal/30 rounded-full px-2 py-0.5"
+                      >
+                        {String(v)}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {description !== undefined ? (
+                  <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap">
+                    {String(description)}
+                  </p>
+                ) : (
+                  <pre className="text-xs font-mono text-slate whitespace-pre-wrap break-words">
+                    {JSON.stringify(item, null, 2)}
+                  </pre>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+  }
+
   return (
-    <pre className="text-xs font-mono text-slate whitespace-pre-wrap break-words border border-rule bg-white/70 rounded-md p-3">
-      {JSON.stringify(data, null, 2)}
+    <pre className="text-xs font-mono text-slate whitespace-pre-wrap break-words">
+      {JSON.stringify(value, null, 2)}
     </pre>
   );
 }
