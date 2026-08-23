@@ -8,10 +8,7 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'https://documentsanalysistoolserver-production.up.railway.app',
-        changeOrigin: true,
-        headers: {
-          'ngrok-skip-browser-warning': 'true'
-        }
+        changeOrigin: true
       }
     }
   }

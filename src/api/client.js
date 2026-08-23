@@ -3,10 +3,6 @@ import { getAccessToken } from "../lib/supabaseClient.js";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "/api",
-  headers: {
-    // Bypasses the ngrok free-tier browser warning page for API requests
-    "ngrok-skip-browser-warning": "true",
-  },
 });
 
 // Attach the Supabase session token to every request so the Flask backend
