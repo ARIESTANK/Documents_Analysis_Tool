@@ -135,9 +135,9 @@ export default function ProjectView() {
           internally instead of the page growing taller.
         */}
         <section className="border border-rule bg-white/30 rounded-xl shadow-sm min-w-0 xl:h-[calc(100vh-200px)] xl:min-h-[560px] xl:overflow-hidden">
-          <div className="grid grid-cols-1 xl:grid-cols-[1.05fr_0.95fr] xl:grid-rows-1 min-w-0 xl:h-full">
-            <div className="border-b xl:border-b-0 xl:border-r border-rule bg-gradient-to-br from-white/80 to-white/50 p-4 flex flex-col min-w-0 h-[600px] xl:h-full xl:min-h-0">
-              <div className="mb-3 flex items-start justify-between gap-2 flex-wrap">
+   <div className="grid grid-cols-1 xl:grid-cols-[1.05fr_0.95fr] xl:grid-rows-1 min-w-0 xl:h-full">
+    <div className="border-b xl:border-b-0 xl:border-r border-rule bg-gradient-to-br from-white/80 to-white/50 p-4 flex flex-col min-w-0 h-[600px] xl:h-full xl:min-h-0">
+         <div className="mb-3 flex items-start justify-between gap-2 flex-wrap">
                 <div className="min-w-0">
                   <p className="text-[11px] font-mono uppercase tracking-widest text-slate mb-1">
                     Document preview
