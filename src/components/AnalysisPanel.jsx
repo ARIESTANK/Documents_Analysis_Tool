@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Sparkles, Loader2, RefreshCcw } from "lucide-react";
 import useTranslatedContent from "../hooks/useTranslatedContent.js";
 import TranslatingOverlay from "./TranslatingOverlay.jsx";
+import MarkdownResult from "./MarkdownResult.jsx";
 import { getDocumentFunctions, runDocumentAnalysis } from "../api/client.js";
 
 /**
@@ -144,9 +145,7 @@ export default function AnalysisPanel({ document, language }) {
                 {result.output_format === "json" ? (
                   <JsonResult data={displayedOutput} />
                 ) : (
-                  <div className="rounded-md border border-rule bg-white/70 p-3 text-sm text-slate leading-relaxed whitespace-pre-wrap">
-                    {displayedOutput}
-                  </div>
+                  <MarkdownResult text={displayedOutput} />
                 )}
               </TranslatingOverlay>
             </div>
