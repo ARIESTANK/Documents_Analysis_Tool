@@ -7,7 +7,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'https://charlene-cutaneous-nonextrinsically.ngrok-free.dev',
+        target: 'https://documentsanalysistoolserver-production.up.railway.app',
         changeOrigin: true,
         headers: {
           'ngrok-skip-browser-warning': 'true'
