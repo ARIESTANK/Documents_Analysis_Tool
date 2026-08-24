@@ -5,6 +5,7 @@ import useTranslatedContent from "../hooks/useTranslatedContent.js";
 import { useToast } from "../context/ToastContext.jsx";
 import TranslatingOverlay from "./TranslatingOverlay.jsx";
 import TypewriterText from "./TypewriterText.jsx";
+import { CompactMarkdown } from "./MarkdownResult.jsx";
 
 const SUGGESTIONS = [
   "Summarize this paper",
@@ -25,7 +26,9 @@ export default function ChatPanel({ document, onCitationsUpdate, language }) {
   // Messages restored from history render instantly; only replies that
   // arrive during this session get the typewriter reveal.
   const [animateFrom, setAnimateFrom] = useState(0);
-  const animatedRef = useRef(new Set());
+  // State (not a ref) so finishing the typewriter reveal re-renders and
+  // swaps the message over to formatted markdown right away.
+  const [animatedSet, setAnimatedSet] = useState(new Set());
 
   useEffect(() => {
     if (!document?.id) return;
@@ -93,7 +96,10 @@ export default function ChatPanel({ document, onCitationsUpdate, language }) {
         )}
 
         <TranslatingOverlay loading={translating} className="space-y-4">
-        {messages.map((m, i) => (
+        {messages.map((m, i) => {
+          const text = displayedMessages?.[i] ?? m.content;
+          const isTyping = m.role === "assistant" && i >= animateFrom && !animatedSet.has(i);
+          return (
           <div
             key={i}
             className={`flex animate-fade-in-up ${m.role === "user" ? "justify-end" : "justify-start"}`}
@@ -105,17 +111,21 @@ export default function ChatPanel({ document, onCitationsUpdate, language }) {
                   : "bg-white/70 border border-rule text-ink rounded-bl-sm"
               }`}
             >
-              <p className="whitespace-pre-wrap">
-                {m.role === "assistant" && i >= animateFrom && !animatedRef.current.has(i) ? (
-                  <TypewriterText
-                    text={displayedMessages?.[i] ?? m.content}
-                    animate
-                    onDone={() => animatedRef.current.add(i)}
-                  />
+              {m.role === "assistant" ? (
+                isTyping ? (
+                  <p className="whitespace-pre-wrap">
+                    <TypewriterText
+                      text={text}
+                      animate
+                      onDone={() => setAnimatedSet((prev) => new Set(prev).add(i))}
+                    />
+                  </p>
                 ) : (
-                  displayedMessages?.[i] ?? m.content
-                )}
-              </p>
+                  <CompactMarkdown text={text} />
+                )
+              ) : (
+                <p className="whitespace-pre-wrap">{text}</p>
+              )}
               {m.citations?.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-rule/60">
                   {m.citations.map((c, ci) => (
@@ -130,7 +140,8 @@ export default function ChatPanel({ document, onCitationsUpdate, language }) {
               )}
             </div>
           </div>
-        ))}
+          );
+        })}
         </TranslatingOverlay>
 
         {sending && (

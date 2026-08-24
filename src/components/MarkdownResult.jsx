@@ -41,6 +41,17 @@ export default function MarkdownResult({ text }) {
   );
 }
 
+/**
+ * Chat-flavored variant: same parser, no section cards / amber eyebrows —
+ * just headings, lists, bold/italic/code/math sized to sit inside a
+ * message bubble. Used for assistant replies once they're done streaming.
+ */
+export function CompactMarkdown({ text, className = "" }) {
+  const blocks = useMemo(() => parseMarkdown(text || ""), [text]);
+  if (!blocks.length) return null;
+  return <div className={`grid gap-1.5 ${className}`}>{renderBlocks(blocks)}</div>;
+}
+
 /* ---------------------------- block parsing ---------------------------- */
 
 const HEADING_RE = /^(#{1,4})\s+(.*)$/;
@@ -156,9 +167,14 @@ function groupIntoSections(blocks) {
 
 function renderBlocks(blocks) {
   return blocks.map((block, i) => {
-    if (block.type === "subheading") {
+    if (block.type === "h" || block.type === "subheading") {
+      const level = block.level ?? 4;
+      const cls =
+        level <= 2
+          ? "text-sm font-semibold text-ink mt-1"
+          : "text-sm font-semibold text-teal mt-1";
       return (
-        <p key={i} className="text-sm font-semibold text-teal mt-1">
+        <p key={i} className={cls}>
           {renderInline(block.text)}
         </p>
       );
